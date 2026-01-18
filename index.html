@@ -20,13 +20,21 @@
       font-family: monospace;
     }
 
+    #canvas-container {
+      background: #000;
+    }
+
     canvas {
       border: 1px solid #333;
+      background: transparent;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+  <div id="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
   <script src="index.js"></script>
   <script type="module" src="src/main.js"></script>
 </body>

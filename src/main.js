@@ -1,13 +1,17 @@
 import { drawWord } from "./components/letter-renderer.js"
-import { Pane } from "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js"
-
-const CANVAS_WIDTH = 800
-const CANVAS_HEIGHT = 600
-const BACKGROUND_COLOR = "#000"
-const FOREGROUND_COLOR = "#fff"
+import { createControls } from "./ui/controls.js"
 
 const params = {
+  canvas: {
+    width: 800,
+    height: 800,
+    backgroundColor: "#000",
+    foregroundColor: "#fff"
+  },
   word: "IDENTITY",
+  wordWidth: 400,
+  spaceWidth: 0.5,
+  lineWidth: 2,
   mode: "SPREAD_ACCUMULATION",
   spreadCount: 10,
   spreadJitterX: 120,
@@ -21,63 +25,25 @@ const params = {
   }
 }
 
-// ===== SETUP =====
-
 const canvas = document.getElementById("canvas")
+const canvasContainer = document.getElementById("canvas-container")
 const ctx = canvas.getContext("2d")
 
-canvas.width = CANVAS_WIDTH
-canvas.height = CANVAS_HEIGHT
-
-const pane = new Pane({ title: "Controls" })
-
-pane.addBinding(params, "word")
-pane.addBinding(params, "mode", {
-  options: {
-    "Spread Accumulation": "SPREAD_ACCUMULATION",
-    "Center Overwrite": "CENTER_OVERWRITE",
-  }
-})
-pane.addBinding(params, "spreadCount", { min: 1, max: 100, step: 1 })
-pane.addBinding(params, "spreadJitterX", { min: 0, max: CANVAS_WIDTH / 2, step: 10 })
-pane.addBinding(params, "spreadJitterY", { min: 0, max: CANVAS_HEIGHT / 2, step: 10 })
-
-const potraceFolder = pane.addFolder({ title: "Potrace Config" })
-potraceFolder.addBinding(params.potrace, "turdsize", { min: 0, max: 10, step: 1 })
-potraceFolder.addBinding(params.potrace, "turnpolicy", {
-  options: {
-    "Minority": "minority",
-    "Majority": "majority",
-    "Black": "black",
-    "White": "white",
-    "Right": "right",
-    "Left": "left"
-  }
-})
-potraceFolder.addBinding(params.potrace, "alphamax", { min: 0, max: 1.33, step: 0.01 })
-potraceFolder.addBinding(params.potrace, "optcurve")
-potraceFolder.addBinding(params.potrace, "opttolerance", { min: 0, max: 1, step: 0.01 })
-pane.addButton({ title: "Clear Canvas" }).on("click", clearCanvas)
-pane.addButton({ title: "Iterate" }).on("click", runIteration)
-
 function clearCanvas () {
-  ctx.fillStyle = BACKGROUND_COLOR
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  ctx.clearRect(0, 0, params.canvas.width, params.canvas.height)
 }
 
 function drawBaseWord () {
-  drawWord(ctx, params.word, CANVAS_WIDTH / 2, FOREGROUND_COLOR, 0.1)
+  drawWord(ctx, params.word, params.wordWidth, params.canvas.foregroundColor, 0.1, null, null, params.spaceWidth, params.lineWidth)
 }
 
 function drawSpreadWords () {
   for (let i = 0; i < params.spreadCount; i++) {
-    const x = CANVAS_WIDTH / 2 + (Math.random() * 2 - 1) * params.spreadJitterX
-    const y = CANVAS_HEIGHT / 2 + (Math.random() * 2 - 1) * params.spreadJitterY
-    drawWord(ctx, params.word, CANVAS_WIDTH / 2, FOREGROUND_COLOR, 0.1, x, y)
+    const x = params.canvas.width / 2 + (Math.random() * 2 - 1) * params.spreadJitterX
+    const y = params.canvas.height / 2 + (Math.random() * 2 - 1) * params.spreadJitterY
+    drawWord(ctx, params.word, params.canvas.width / 2, params.canvas.foregroundColor, 0.1, x, y, params.spaceWidth, params.lineWidth)
   }
 }
-
-// ===== ITERATION =====
 
 async function runIteration () {
   if (params.mode === "CENTER_OVERWRITE") drawBaseWord()
@@ -92,7 +58,6 @@ async function runIteration () {
   }
 }
 
-// SVG → Canvas
 function renderSVG (svgString) {
   return new Promise(resolve => {
     const img = new Image()
@@ -100,16 +65,62 @@ function renderSVG (svgString) {
     const url = URL.createObjectURL(blob)
 
     img.onload = () => {
-      // clearCanvas()
       ctx.drawImage(img, 0, 0)
       URL.revokeObjectURL(url)
-      // console.log('svgString:', svgString)
       resolve()
     }
 
     img.src = url
   })
 }
+
+function exportWithBackground(format, quality = 1.0) {
+  const currentImageData = canvas.toDataURL("image/png")
+  const img = new Image()
+  
+  img.onload = () => {
+    ctx.fillStyle = params.canvas.backgroundColor
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0)
+    
+    const link = document.createElement("a")
+    const timestamp = Date.now()
+    link.download = `canvas-export-${timestamp}.${format === "image/png" ? "png" : "jpg"}`
+    link.href = canvas.toDataURL(format, quality)
+    link.click()
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0)
+  }
+  
+  img.src = currentImageData
+}
+
+function exportAsPNG() {
+  exportWithBackground("image/png")
+}
+
+function exportAsJPEG() {
+  exportWithBackground("image/jpeg", 0.95)
+}
+
+function updateCanvasSize() {
+  canvas.width = params.canvas.width
+  canvas.height = params.canvas.height
+  controls.updateRelatedValues()
+  clearCanvas()
+}
+
+const controls = createControls(params, canvasContainer, {
+  onUpdateCanvas: updateCanvasSize,
+  onDrawBaseWord: drawBaseWord,
+  onClearCanvas: clearCanvas,
+  onIterate: runIteration,
+  onExportPNG: exportAsPNG,
+  onExportJPEG: exportAsJPEG
+})
+
+updateCanvasSize()
 
 clearCanvas()
 drawBaseWord()

@@ -5,7 +5,7 @@
 /**
  * Draws a letter on the canvas context
  */
-export function drawLetter (ctx, letter, x, y, width, height, color) {
+export function drawLetter (ctx, letter, x, y, width, height, color, lineWidth = 2) {
   const letterFunc = letterFunctions[letter.toUpperCase()]
   if (!letterFunc) return
 
@@ -16,7 +16,7 @@ export function drawLetter (ctx, letter, x, y, width, height, color) {
 
   ctx.strokeStyle = color
   ctx.fillStyle = color
-  ctx.lineWidth = 2
+  ctx.lineWidth = lineWidth
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
@@ -25,8 +25,10 @@ export function drawLetter (ctx, letter, x, y, width, height, color) {
   ctx.restore()
 }
 
-export function drawWord (ctx, text, targetWidth, color, letterSpacing = 0.1, x = null, y = null) {
-  const letters = text.toUpperCase().split('').filter(char => /[A-Z]/.test(char))
+export function drawWord (ctx, text, targetWidth, color, letterSpacing = 0.1, x = null, y = null, spaceWidth = 0.5, lineWidth = 2) {
+  // Process text: keep all characters including spaces, convert letters to uppercase
+  const chars = text.split('').map(char => char === ' ' ? ' ' : char.toUpperCase())
+  const letters = chars.filter(char => /[A-Z]/.test(char))
   if (letters.length === 0) return
 
   // Default to canvas center if x/y not provided
@@ -36,19 +38,39 @@ export function drawWord (ctx, text, targetWidth, color, letterSpacing = 0.1, x 
   // Calculate letter dimensions to fit target width
   // Each letter has aspect ratio of ~0.6 (width/height)
   const aspectRatio = 0.6
-  const totalSpacing = letterSpacing * targetWidth / letters.length * (letters.length - 1)
-  const availableWidth = targetWidth - totalSpacing
-  const letterWidth = availableWidth / letters.length
+  
+  // Count spaces and letters separately
+  const spaceCount = chars.filter(char => char === ' ').length
+  const letterCount = letters.length
+  
+  // Calculate letter width using the formula:
+  // targetWidth = letterCount * letterWidth + (letterCount - 1) * letterSpacing * letterWidth + spaceCount * letterWidth * spaceWidth
+  // targetWidth = letterWidth * (letterCount + (letterCount - 1) * letterSpacing + spaceCount * spaceWidth)
+  const letterWidth = targetWidth / (letterCount + (letterCount - 1) * letterSpacing + spaceCount * spaceWidth)
   const letterHeight = letterWidth / aspectRatio
-
-  // Calculate starting position (centered horizontally)
-  const totalWidth = letters.length * letterWidth + totalSpacing
+  
+  // Calculate total width for centering
+  const totalWidth = letterCount * letterWidth + (letterCount - 1) * letterSpacing * letterWidth + spaceCount * letterWidth * spaceWidth
   const startX = x - totalWidth / 2 + letterWidth / 2
   const startY = y
 
-  letters.forEach((letter, index) => {
-    const letterX = startX + index * (letterWidth + letterSpacing * letterWidth)
-    drawLetter(ctx, letter, letterX, startY, letterWidth, letterHeight, color)
+  // Draw characters, handling spaces
+  let currentX = startX
+  let letterIndex = 0
+  
+  chars.forEach((char) => {
+    if (char === ' ') {
+      // Skip space width
+      currentX += letterWidth * spaceWidth
+    } else if (/[A-Z]/.test(char)) {
+      // Draw letter
+      drawLetter(ctx, char, currentX, startY, letterWidth, letterHeight, color, lineWidth)
+      // Move to next position (add spacing if not last letter)
+      if (letterIndex < letterCount - 1) {
+        currentX += letterWidth + letterSpacing * letterWidth
+      }
+      letterIndex++
+    }
   })
 }
 
