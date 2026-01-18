@@ -1,0 +1,13 @@
+{
+  "name": "word-disintegration-study",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "./serve.sh"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
