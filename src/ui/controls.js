@@ -90,12 +90,12 @@ export function createControls(params, canvasContainer, callbacks) {
   potraceFolder.addBinding(params.potrace, "optcurve")
   potraceFolder.addBinding(params.potrace, "opttolerance", { min: 0, max: 1, step: 0.01 })
 
-  pane.addButton({ title: "Clear Canvas" }).on("click", onClearCanvas)
-  pane.addButton({ title: "Iterate" }).on("click", onIterate)
-
   const exportFolder = pane.addFolder({ title: "Export" })
   exportFolder.addButton({ title: "Export as PNG" }).on("click", onExportPNG)
   exportFolder.addButton({ title: "Export as JPEG" }).on("click", onExportJPEG)
+
+  pane.addButton({ title: "Iterate" }).on("click", onIterate)
+
 
   return {
     pane,

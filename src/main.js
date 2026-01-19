@@ -3,8 +3,8 @@ import { createControls } from "./ui/controls.js"
 
 const params = {
   canvas: {
-    width: 800,
-    height: 800,
+    width: 540,
+    height: 960,
     backgroundColor: "#000",
     foregroundColor: "#fff"
   },
@@ -121,6 +121,12 @@ const controls = createControls(params, canvasContainer, {
 })
 
 updateCanvasSize()
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "k" || e.key === "K") {
+    params.spreadCount = Math.min(params.spreadCount + 10, 100)
+  }
+})
 
 clearCanvas()
 drawBaseWord()
