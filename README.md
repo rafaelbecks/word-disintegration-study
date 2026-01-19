@@ -10,6 +10,8 @@ A creative coding project that explores word disintegration through iterative SV
 | ![](output/4.png) | ![](output/5.png) |
 | ![](output/6.png) | ![](output/7.png) |
 | ![](output/8.png) | ![](output/9.png) |
+| ![](output/canvas-export-1768772625997.png) | ![](output/canvas-export-1768774907935.png) |
+| ![](output/canvas-export-1768775211201.png) | ![](output/canvas-export-1768789641956.png) |
 
 
 
