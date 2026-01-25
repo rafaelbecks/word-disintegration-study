@@ -79,13 +79,8 @@ const letterFunctions = {
     ctx.beginPath()
     ctx.moveTo(50, 10)
     ctx.lineTo(20, 90)
-    ctx.lineTo(35, 90)
-    ctx.lineTo(50, 60)
-    ctx.lineTo(65, 90)
-    ctx.lineTo(80, 90)
+    ctx.moveTo(80, 90)
     ctx.lineTo(50, 10)
-    ctx.moveTo(42, 50)
-    ctx.lineTo(58, 50)
     ctx.stroke()
   },
 
